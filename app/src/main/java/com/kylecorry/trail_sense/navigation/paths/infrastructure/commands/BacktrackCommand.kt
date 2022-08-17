@@ -11,6 +11,7 @@ import com.kylecorry.trail_sense.shared.networkQuality
 import com.kylecorry.trail_sense.shared.sensors.NullCellSignalSensor
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.altimeter.FusedAltimeter
+import com.kylecorry.trail_sense.shared.sensors.readUntilValid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -45,7 +46,7 @@ class BacktrackCommand(private val context: Context, private val pathId: Long = 
                     jobs.add(launch { gps.read() })
 
                     if (shouldReadAltimeter()) {
-                        jobs.add(launch { altimeter.read() })
+                        jobs.add(launch { altimeter.readUntilValid() })
                     }
 
                     jobs.add(launch { cellSignalSensor.read() })

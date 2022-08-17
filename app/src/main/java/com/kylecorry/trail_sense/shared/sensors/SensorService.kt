@@ -32,9 +32,11 @@ import com.kylecorry.andromeda.sense.temperature.AmbientThermometer
 import com.kylecorry.andromeda.sense.temperature.Thermometer
 import com.kylecorry.andromeda.signal.CellSignalSensor
 import com.kylecorry.andromeda.signal.ICellSignalSensor
+import com.kylecorry.sol.math.filters.MedianFilter
 import com.kylecorry.sol.math.filters.MovingAverageFilter
 import com.kylecorry.trail_sense.navigation.infrastructure.NavigationPreferences
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.sensors.altimeter.FilteredAltimeter
 import com.kylecorry.trail_sense.shared.sensors.altimeter.FusedAltimeter
 import com.kylecorry.trail_sense.shared.sensors.hygrometer.NullHygrometer
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedAltimeter
@@ -136,7 +138,7 @@ class SensorService(ctx: Context) {
             ) {
                 FusedAltimeter(gps, Barometer(context))
             } else {
-                gps
+                FilteredAltimeter(gps, MedianFilter(5), 5)
             }
         }
     }

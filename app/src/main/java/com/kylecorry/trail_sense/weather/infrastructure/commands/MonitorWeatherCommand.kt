@@ -6,9 +6,10 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.shared.extensions.onIO
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.readUntilValid
 import com.kylecorry.trail_sense.weather.domain.RawWeatherObservation
-import com.kylecorry.trail_sense.weather.infrastructure.subsystem.WeatherSubsystem
 import com.kylecorry.trail_sense.weather.infrastructure.persistence.WeatherRepo
+import com.kylecorry.trail_sense.weather.infrastructure.subsystem.WeatherSubsystem
 import kotlinx.coroutines.*
 import java.time.Duration
 import java.time.Instant
@@ -31,7 +32,7 @@ class MonitorWeatherCommand(private val context: Context, private val background
             withTimeoutOrNull(Duration.ofSeconds(10).toMillis()) {
                 val jobs = mutableListOf<Job>()
                 if (!altimeter.hasValidReading) {
-                    jobs.add(launch { altimeter.read() })
+                    jobs.add(launch { altimeter.readUntilValid() })
                 }
 
                 if (!barometer.hasValidReading) {
