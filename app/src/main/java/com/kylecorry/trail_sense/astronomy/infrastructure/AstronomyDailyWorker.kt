@@ -6,6 +6,8 @@ import com.kylecorry.andromeda.jobs.DailyWorker
 import com.kylecorry.andromeda.jobs.OneTimeTaskSchedulerFactory
 import com.kylecorry.trail_sense.astronomy.infrastructure.commands.AstronomyAlertCommand
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.background.BackgroundProcess
+import com.kylecorry.trail_sense.shared.background.OneTimeBackgroundProcess
 import java.time.Duration
 import java.time.LocalTime
 
@@ -36,11 +38,13 @@ class AstronomyDailyWorker(context: Context, params: WorkerParameters) : DailyWo
     companion object {
 
         const val UNIQUE_ID = 72394823
-        fun start(context: Context) {
-            OneTimeTaskSchedulerFactory(context).deferrable(
+
+        fun process(context: Context): BackgroundProcess {
+            val scheduler = OneTimeTaskSchedulerFactory(context).deferrable(
                 AstronomyDailyWorker::class.java,
                 UNIQUE_ID
-            ).once()
+            )
+            return OneTimeBackgroundProcess(scheduler)
         }
     }
 }

@@ -3,9 +3,10 @@ package com.kylecorry.trail_sense.weather.infrastructure
 import android.app.Notification
 import android.content.Context
 import android.content.Intent
-import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.services.CoroutineIntervalService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.background.BackgroundProcess
+import com.kylecorry.trail_sense.shared.background.ServiceBackgroundProcess
 import com.kylecorry.trail_sense.weather.infrastructure.alerts.CurrentWeatherAlerter
 import com.kylecorry.trail_sense.weather.infrastructure.subsystem.WeatherSubsystem
 import java.time.Duration
@@ -36,16 +37,9 @@ class WeatherMonitorAlwaysOnService : CoroutineIntervalService(TAG) {
     companion object {
         const val TAG = "WeatherMonitorHighPriorityService"
 
-        fun intent(context: Context): Intent {
-            return Intent(context, WeatherMonitorAlwaysOnService::class.java)
-        }
-
-        fun start(context: Context) {
-            Intents.startService(context, intent(context), foreground = true)
-        }
-
-        fun stop(context: Context) {
-            context.stopService(intent(context))
+        fun process(context: Context): BackgroundProcess {
+            val intent = Intent(context, WeatherMonitorAlwaysOnService::class.java)
+            return ServiceBackgroundProcess(context, intent, true)
         }
 
     }

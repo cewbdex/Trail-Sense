@@ -5,7 +5,6 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
-import com.kylecorry.andromeda.jobs.IOneTimeTaskScheduler
 import com.kylecorry.andromeda.jobs.IntervalWorker
 import com.kylecorry.andromeda.jobs.OneTimeTaskSchedulerFactory
 import com.kylecorry.andromeda.notify.Notify
@@ -14,6 +13,8 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.navigation.paths.infrastructure.commands.BacktrackCommand
 import com.kylecorry.trail_sense.navigation.paths.infrastructure.subsystem.BacktrackSubsystem
 import com.kylecorry.trail_sense.shared.FeatureState
+import com.kylecorry.trail_sense.shared.background.BackgroundProcess
+import com.kylecorry.trail_sense.shared.background.OneTimeBackgroundProcess
 import java.time.Duration
 
 class BacktrackWorker(context: Context, params: WorkerParameters) :
@@ -61,11 +62,12 @@ class BacktrackWorker(context: Context, params: WorkerParameters) :
     companion object {
         private const val UNIQUE_ID = 7238542
 
-        fun scheduler(context: Context): IOneTimeTaskScheduler {
-            return OneTimeTaskSchedulerFactory(context).deferrable(
+        fun process(context: Context): BackgroundProcess {
+            val scheduler = OneTimeTaskSchedulerFactory(context).deferrable(
                 BacktrackWorker::class.java,
                 UNIQUE_ID
             )
+            return OneTimeBackgroundProcess(scheduler)
         }
     }
 

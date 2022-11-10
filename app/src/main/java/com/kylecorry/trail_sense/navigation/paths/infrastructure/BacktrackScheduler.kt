@@ -1,10 +1,11 @@
 package com.kylecorry.trail_sense.navigation.paths.infrastructure
 
 import android.content.Context
-import com.kylecorry.andromeda.jobs.IOneTimeTaskScheduler
 import com.kylecorry.trail_sense.navigation.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.navigation.paths.infrastructure.services.BacktrackAlwaysOnService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.background.BackgroundProcess
+import com.kylecorry.trail_sense.shared.background.FrequencyCutoffBackgroundProcess
 import com.kylecorry.trail_sense.shared.permissions.AllowForegroundWorkersCommand
 import kotlinx.coroutines.runBlocking
 import java.time.Duration
@@ -20,8 +21,6 @@ object BacktrackScheduler {
     }
 
     fun start(context: Context, startNewPath: Boolean) {
-        val prefs = UserPreferences(context)
-
         if (startNewPath) {
             runBlocking {
                 PathService.getInstance(context).endBacktrackPath()
@@ -34,20 +33,11 @@ object BacktrackScheduler {
 
         AllowForegroundWorkersCommand(context).execute()
 
-        val scheduler = getScheduler(context)
-        if (prefs.backtrackRecordFrequency >= Duration.ofMinutes(15)) {
-            BacktrackAlwaysOnService.stop(context)
-            scheduler.once()
-        } else {
-            scheduler.cancel()
-            BacktrackAlwaysOnService.start(context)
-        }
+        getProcess(context).start()
     }
 
     fun stop(context: Context) {
-        val scheduler = getScheduler(context)
-        scheduler.cancel()
-        BacktrackAlwaysOnService.stop(context)
+        getProcess(context).stop()
         AllowForegroundWorkersCommand(context).execute()
     }
 
@@ -59,7 +49,14 @@ object BacktrackScheduler {
         return BacktrackIsAvailable().not().isSatisfiedBy(context)
     }
 
-    private fun getScheduler(context: Context): IOneTimeTaskScheduler {
-        return BacktrackWorker.scheduler(context)
+    private fun getProcess(context: Context): BackgroundProcess {
+        val prefs = UserPreferences(context)
+        return FrequencyCutoffBackgroundProcess(
+            BacktrackAlwaysOnService.process(context),
+            BacktrackWorker.process(context),
+            Duration.ofMinutes(15),
+            prefs.backtrackRecordFrequency
+        )
     }
+
 }

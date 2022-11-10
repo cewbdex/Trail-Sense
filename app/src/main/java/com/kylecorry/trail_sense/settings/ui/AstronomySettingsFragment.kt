@@ -22,7 +22,7 @@ class AstronomySettingsFragment : AndromedaPreferenceFragment() {
 
         list(R.string.pref_sunset_alert_time)?.setOnPreferenceClickListener { _ ->
                 context?.apply {
-                    SunsetAlarmReceiver.start(this)
+                    SunsetAlarmReceiver.process(this).start()
                 }
                 true
             }
