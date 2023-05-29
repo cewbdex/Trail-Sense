@@ -45,10 +45,13 @@ open class EnhancedImageView : SubsamplingScaleImageView {
 
 
     override fun onDraw(canvas: Canvas?) {
+        var rotatedImage = false
         if (isSetup && canvas != null) {
             drawer.canvas = canvas
             drawer.push()
-            drawer.rotate(-(imageRotation - rotationOffset))
+            drawer.rotate(-imageRotation)
+            drawer.rotate(rotationOffset)
+            rotatedImage = true
         }
 
         super.onDraw(canvas)
@@ -60,6 +63,10 @@ open class EnhancedImageView : SubsamplingScaleImageView {
             drawer = CanvasDrawer(context, canvas)
             mySetup()
             isSetup = true
+        }
+
+        if (rotatedImage) {
+            drawer.rotate(-rotationOffset)
         }
 
         myDraw()
@@ -237,32 +244,38 @@ open class EnhancedImageView : SubsamplingScaleImageView {
     }
 
     protected fun toView(sourceX: Float, sourceY: Float, withRotation: Boolean = false): PointF? {
-        val view = sourceToViewCoord(sourceX, sourceY)
-        if (!withRotation) {
-            return view
+        val point = floatArrayOf(sourceX, sourceY)
+        synchronized(lookupMatrix) {
+            lookupMatrix.reset()
+            if (withRotation) {
+                lookupMatrix.postRotate(-imageRotation, width / 2f, height / 2f)
+            }
+            lookupMatrix.postScale(scale, scale)
+            lookupMatrix.postTranslate(vTranslate?.x ?: 0f, vTranslate?.y ?: 0f)
+            lookupMatrix.postRotate(rotationOffset, width / 2f, height / 2f)
+            lookupMatrix.mapPoints(point)
         }
-        val point = floatArrayOf(view?.x ?: 0f, view?.y ?: 0f)
-        lookupMatrix.reset()
-        lookupMatrix.postRotate(-imageRotation, width / 2f, height / 2f)
-        lookupMatrix.mapPoints(point)
-        view?.x = point[0]
-        view?.y = point[1]
-        return view
+        return PointF(point[0], point[1])
     }
 
     protected fun toSource(viewX: Float, viewY: Float, withRotation: Boolean = false): PointF? {
-        if (!withRotation) {
-            return viewToSourceCoord(viewX, viewY)
-        }
         val point = floatArrayOf(viewX, viewY)
-        lookupMatrix.reset()
-        lookupMatrix.postRotate(-imageRotation, width / 2f, height / 2f)
-        lookupMatrix.invert(lookupMatrix)
-        lookupMatrix.mapPoints(point)
-        return viewToSourceCoord(point[0], point[1])
+        synchronized(lookupMatrix) {
+            lookupMatrix.reset()
+            if (withRotation) {
+                lookupMatrix.postRotate(-imageRotation, width / 2f, height / 2f)
+            }
+            lookupMatrix.postScale(scale, scale)
+            lookupMatrix.postTranslate(vTranslate?.x ?: 0f, vTranslate?.y ?: 0f)
+            lookupMatrix.postRotate(rotationOffset, width / 2f, height / 2f)
+            lookupMatrix.invert(lookupMatrix)
+            lookupMatrix.mapPoints(point)
+        }
+        return PointF(point[0], point[1])
     }
 
     val imageWidth: Int
+        // TODO: Handle non-90 degree rotations
         get() {
             return if (orientation == 90 || orientation == 270) {
                 sHeight
@@ -272,6 +285,7 @@ open class EnhancedImageView : SubsamplingScaleImageView {
         }
 
     val imageHeight: Int
+        // TODO: Handle non-90 degree rotations
         get() {
             return if (orientation == 90 || orientation == 270) {
                 sWidth
